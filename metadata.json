@@ -1,0 +1,8 @@
+{
+  "name": "3D Data Metropolis — Tactical Voxel Matrix Engine",
+  "description": "Cybernetic Brutalist 3D financial data visualization and spatial voxel matrix engine for corporate pre-tax profit analysis with XR Blocks, Three.js InstancedMesh, and Google Sheets integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
