@@ -152,7 +152,7 @@ export class StudioOverlay {
         <!-- Top Spec Bar -->
         <div class="flex items-center justify-between border-b border-white/15 pb-4">
           <div class="flex items-center gap-4">
-            <span class="font-mono-tabular text-xs tracking-widest text-cyan-400 font-semibold">ARTIFICIAL CRAFT // CAD MATRIX</span>
+            <a href="https://artificialcraft.space/" target="_blank" rel="noopener noreferrer" class="font-mono-tabular text-xs tracking-widest text-cyan-400 hover:text-cyan-300 font-semibold underline decoration-cyan-400/40">ARTIFICIAL CRAFT // CAD MATRIX ↗</a>
             <span class="text-zinc-500">·</span>
             <span class="font-mono-tabular text-xs text-zinc-400">50 CORPORATE ENTITIES LOADED</span>
           </div>
@@ -192,6 +192,15 @@ export class StudioOverlay {
             <button id="btn-open-report-title" class="px-4 py-3.5 bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-white/15 text-xs font-medium rounded transition-colors cursor-pointer whitespace-nowrap">
               View Original Report Table
             </button>
+            <a
+              href="https://artificialcraft.space/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-4 py-3.5 bg-cyan-950/60 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/40 font-mono-tabular text-xs font-semibold rounded transition-colors cursor-pointer whitespace-nowrap inline-flex items-center gap-2"
+            >
+              <span>Open artificialcraft.space</span>
+              <span>↗</span>
+            </a>
           </div>
         </div>
 
@@ -257,6 +266,29 @@ export class StudioOverlay {
             </div>
           </div>
 
+          <!-- Quick Navigation Link Card / Thẻ menu bảng điều khiển -->
+          <div class="px-4 py-2 border-b border-white/10 bg-[#0c0c14] flex items-center justify-between">
+            <a
+              id="link-artificialcraft"
+              href="https://artificialcraft.space/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-mono-tabular text-xs font-semibold tracking-wide transition-colors group cursor-pointer"
+              title="Open artificialcraft.space"
+            >
+              <span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(0,229,255,0.8)] group-hover:scale-125 transition-transform animate-pulse"></span>
+              <span>Open artificialcraft.space</span>
+            </a>
+            <a
+              href="https://artificialcraft.space/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-2 py-0.5 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 font-mono-tabular text-[10px] rounded transition-colors"
+            >
+              ↗ LINK
+            </a>
+          </div>
+
           <!-- 5-Tab Navigation Bar -->
           <div class="grid grid-cols-5 border-b border-white/10 bg-[#0d0d12] font-mono-tabular text-[11px]">
             ${this.renderTabButton('metrics', '01.Data')}
@@ -302,6 +334,14 @@ export class StudioOverlay {
             >
               Source Table
             </button>
+            <a
+              href="https://artificialcraft.space/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-3 py-2 bg-[#09090B]/95 hover:bg-zinc-900 text-cyan-300 border border-cyan-500/40 rounded font-mono-tabular text-xs font-semibold shadow-lg cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5"
+            >
+              Open artificialcraft.space ↗
+            </a>
           </div>
         `
             : ''
@@ -1542,20 +1582,50 @@ export class StudioOverlay {
   }
 
   private parseCsvToObjects(csvText: string): Record<string, string>[] {
-    const lines = csvText
+    const cleanText = csvText.replace(/^\uFEFF/, '');
+    const lines = cleanText
       .split(/\r?\n/)
       .map((l) => l.trim())
       .filter(Boolean);
     if (lines.length < 2) return [];
-    const headers = lines[0].split(',').map((h) => h.trim());
+
+    const firstLine = lines[0];
+    const delimiter =
+      firstLine.includes(';') && !firstLine.includes(',') ? ';' : ',';
+
+    const headers = this.splitCsvRow(firstLine, delimiter);
     return lines.slice(1).map((line) => {
-      const cols = line.split(',').map((c) => c.trim());
+      const cols = this.splitCsvRow(line, delimiter);
       const obj: Record<string, string> = {};
       headers.forEach((h, i) => {
         obj[h] = cols[i] ?? '';
       });
       return obj;
     });
+  }
+
+  private splitCsvRow(line: string, delimiter = ','): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === delimiter && !inQuotes) {
+        result.push(current.replace(/^"|"$/g, '').trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.replace(/^"|"$/g, '').trim());
+    return result;
   }
 
   private exportSnapshotPng(): void {

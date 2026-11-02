@@ -249,20 +249,13 @@ export class MetropolisScene extends xb.Script {
     this.plinthInstanced.frustumCulled = false;
     this.plinthInstanced.xb = { pointerEvents: 'none' };
 
-    // Part 3: Stepped Rooftop Crown + Spire
-    const crownPoints = [
-      new THREE.Vector2(0.0, 0.0),
-      new THREE.Vector2(0.16, 0.0),
-      new THREE.Vector2(0.14, 0.06),
-      new THREE.Vector2(0.06, 0.08),
-      new THREE.Vector2(0.015, 0.24),
-      new THREE.Vector2(0.0, 0.24),
-    ];
-    const crownGeo = new THREE.LatheGeometry(crownPoints, 8);
+    // Part 3: Brutalist Architectural Top Plate (Flat Recessed Terminal)
+    const crownGeo = new THREE.BoxGeometry(0.28, 0.04, 0.28);
+    crownGeo.translate(0, 0.02, 0);
     this.crownMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      roughness: 0.18,
-      metalness: 0.88,
+      roughness: 0.35,
+      metalness: 0.6,
     });
     this.crownInstanced = new THREE.InstancedMesh(
       crownGeo,
@@ -468,7 +461,32 @@ export class MetropolisScene extends xb.Script {
 
   public setDataset(newRecords: FinancialCompanyData[]): void {
     this.records = [...newRecords];
+
+    // Ensure duel target references stay valid in new dataset
+    if (this.records.length > 0) {
+      if (!this.records.some((r) => r.ticker === this.state.duelCompanyA)) {
+        this.state.duelCompanyA = this.records[0].ticker;
+      }
+      if (!this.records.some((r) => r.ticker === this.state.duelCompanyB)) {
+        this.state.duelCompanyB = (this.records[1] || this.records[0]).ticker;
+      }
+    }
+
+    // Auto-expand filter bounds if new dataset has numbers beyond defaults
+    if (this.state.profitFilterPreset === 'all' && this.records.length > 0) {
+      const vals = this.records.map((r) => this.getMetricValue(r));
+      const minV = Math.min(...vals);
+      const maxV = Math.max(...vals);
+      if (minV < this.state.minProfitFilter) {
+        this.state.minProfitFilter = Math.floor(minV * 1.2);
+      }
+      if (maxV > this.state.maxProfitFilter) {
+        this.state.maxProfitFilter = Math.ceil(maxV * 1.2);
+      }
+    }
+
     this.rebuildMetropolisLayout(false);
+    this.updateInstancedMatrices();
     soundService.playMetricMorph();
     this.onStateUpdated?.();
   }
@@ -526,7 +544,7 @@ export class MetropolisScene extends xb.Script {
 
         const existing = prevMap.get(comp.id);
         const currentHeight =
-          immediate || !existing ? targetHeight : existing.currentHeight;
+          immediate ? targetHeight : existing ? existing.currentHeight : 0.08;
 
         nextRuntime.push({
           data: comp,
