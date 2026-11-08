@@ -13,7 +13,7 @@ import {
   logoutGoogle,
 } from '../services/googleSheetsService';
 import { soundService } from '../services/soundService';
-import {
+import type {
   CameraPresetMode,
   ColorCodingMode,
   FinancialCompanyData,
@@ -24,6 +24,11 @@ import {
   SectorType,
   ShaderStyleMode,
   ThemePreset,
+} from '../types';
+import {
+  FinancialCompanyDataSchema,
+  FinancialDatasetWrapperSchema,
+  extractRawRowsFromJson,
   sanitizeAndValidateFinancialDataset,
 } from '../types';
 
@@ -569,6 +574,7 @@ export class StudioOverlay {
           <button id="btn-reset-dataset" class="text-[11px] text-cyan-400 hover:underline cursor-pointer">Reset 50 Default</button>
         </div>
         <label
+          id="file-upload-dropzone"
           for="file-upload-input"
           class="block p-3 border border-dashed border-white/20 hover:border-cyan-400 rounded bg-zinc-900/50 text-center cursor-pointer transition-colors"
         >
@@ -1350,35 +1356,35 @@ export class StudioOverlay {
         }
       });
 
-    // Local JSON/CSV File Upload
+    // Local JSON/CSV File Upload with Enhanced Zod Error Logging
     const fileInput = document.getElementById(
       'file-upload-input',
     ) as HTMLInputElement | null;
     fileInput?.addEventListener('change', async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        let rawRows: unknown[] = [];
-        if (file.name.toLowerCase().endsWith('.json')) {
-          const parsed = JSON.parse(text);
-          rawRows = Array.isArray(parsed) ? parsed : parsed.data || [];
-        } else {
-          rawRows = this.parseCsvToObjects(text);
-        }
-        const { valid, errors } = sanitizeAndValidateFinancialDataset(rawRows);
-        if (valid.length > 0) {
-          this.sceneScript.setDataset(valid);
-          this.importStatusMessage = `Loaded ${valid.length} valid companies (${errors.length} skipped).`;
-        } else {
-          this.importStatusMessage = `Validation failed: ${errors.slice(0, 2).join('; ')}`;
-        }
-      } catch (err: unknown) {
-        this.importStatusMessage =
-          err instanceof Error ? err.message : 'Failed to parse file.';
+      if (file) {
+        await this.handleUploadedFile(file);
       }
-      this.render();
     });
+
+    const dropzone = document.getElementById('file-upload-dropzone');
+    if (dropzone) {
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-cyan-400');
+      });
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('border-cyan-400');
+      });
+      dropzone.addEventListener('drop', async (e: DragEvent) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-cyan-400');
+        const file = e.dataTransfer?.files?.[0];
+        if (file) {
+          await this.handleUploadedFile(file);
+        }
+      });
+    }
 
     document
       .getElementById('btn-reset-dataset')
@@ -1698,6 +1704,75 @@ export class StudioOverlay {
     a.download = 'metropolis-profit-summary-2026.csv';
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  public async handleUploadedFile(file: File): Promise<void> {
+    try {
+      const text = await file.text();
+      let rawRows: unknown[] = [];
+      if (file.name.toLowerCase().endsWith('.json')) {
+        const jsonContent = JSON.parse(text);
+        // 1. Validate wrapper or flat array schema
+        const wrapperResult =
+          FinancialDatasetWrapperSchema.safeParse(jsonContent);
+        if (!wrapperResult.success) {
+          console.error(
+            '[Zod Validation Error Details]:',
+            wrapperResult.error.format(),
+          );
+          // Check if single entity was uploaded
+          const singleResult =
+            FinancialCompanyDataSchema.safeParse(jsonContent);
+          if (!singleResult.success) {
+            console.error(
+              '[Zod Validation Error Details - Single Item]:',
+              singleResult.error.format(),
+            );
+            alert(
+              `JSON Validation Failed: ${singleResult.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ')}`,
+            );
+          }
+        }
+        rawRows = extractRawRowsFromJson(jsonContent);
+      } else {
+        rawRows = this.parseCsvToObjects(text);
+      }
+
+      const { valid, errors } = sanitizeAndValidateFinancialDataset(rawRows);
+      if (valid.length > 0) {
+        this.sceneScript.setDataset(valid);
+        this.importStatusMessage = `Loaded ${valid.length} valid companies (${errors.length} skipped).`;
+      } else {
+        // If no valid items, log detailed Zod error breakdown and alert
+        if (rawRows.length > 0) {
+          const result = FinancialCompanyDataSchema.safeParse(rawRows[0]);
+          if (!result.success) {
+            console.error(
+              '[Zod Validation Error Details]:',
+              result.error.format(),
+            );
+            alert(
+              `JSON Validation Failed: ${result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ')}`,
+            );
+          }
+        } else {
+          console.error(
+            '[Zod Validation Error Details]: Empty records found in JSON structure.',
+          );
+          alert(
+            'JSON Validation Failed: No company records found in uploaded file.',
+          );
+        }
+        this.importStatusMessage = `Validation failed: ${errors.slice(0, 2).join('; ') || 'No valid company records found'}`;
+      }
+    } catch (err: unknown) {
+      console.error('[Zod Validation Error Details]:', err);
+      const errMsg =
+        err instanceof Error ? err.message : 'Failed to parse file.';
+      this.importStatusMessage = errMsg;
+      alert(`JSON Validation Failed: ${errMsg}`);
+    }
+    this.render();
   }
 
   private escapeHtml(str: string): string {

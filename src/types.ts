@@ -1,33 +1,26 @@
 import { z } from 'zod';
+import {
+  SectorEnum,
+  FinancialCompanyDataSchema,
+  FinancialDatasetWrapperSchema,
+  extractRawRowsFromJson,
+  preprocessNumeric,
+  preprocessNullableNumeric,
+} from './schemas/financialDataSchema.ts';
+import type {
+  SectorType,
+  FinancialCompanyData,
+} from './schemas/financialDataSchema.ts';
 
-export const SectorEnum = z.enum([
-  'Banking',
-  'RealEstate',
-  'Energy',
-  'Retail',
-  'Logistics',
-  'Manufacturing',
-  'Other',
-]);
-
-export type SectorType = z.infer<typeof SectorEnum>;
-
-export const FinancialCompanyDataSchema = z.object({
-  id: z.string(),
-  ticker: z.string().default('UNKNOWN'),
-  identifier: z.string().optional(),
-  companyName: z.string().default(''),
-  sector: SectorEnum.default('Other'),
-  industryLabel: z.string().optional(),
-  profitQ3_2026: z.number().default(0),
-  profitQ3_2025: z.number().optional().default(0),
-  growthQ3_YoY: z.number().nullable().default(null),
-  profit9M_2026: z.number().default(0),
-  profit9M_2025: z.number().optional().default(0),
-  growth9M_YoY: z.number().nullable().default(null),
-});
-
-export type FinancialCompanyData = z.infer<typeof FinancialCompanyDataSchema>;
+export {
+  SectorEnum,
+  FinancialCompanyDataSchema,
+  FinancialDatasetWrapperSchema,
+  extractRawRowsFromJson,
+  preprocessNumeric,
+  preprocessNullableNumeric,
+};
+export type { SectorType, FinancialCompanyData };
 
 export type MetricMode = 'profitQ3_2026' | 'profit9M_2026' | 'growthYoY';
 export type ScaleMode = 'logarithmic' | 'linear';
@@ -98,7 +91,8 @@ export function sanitizeAndValidateFinancialDataset(
       normalized.includes('bank') ||
       normalized.includes('ngân hàng') ||
       normalized.includes('bảo hiểm') ||
-      normalized.includes('tài chính')
+      normalized.includes('tài chính') ||
+      normalized.includes('finance')
     ) {
       return 'Banking';
     }
@@ -106,7 +100,8 @@ export function sanitizeAndValidateFinancialDataset(
       normalized.includes('real') ||
       normalized.includes('bất động sản') ||
       normalized.includes('hạ tầng') ||
-      normalized.includes('kcn')
+      normalized.includes('kcn') ||
+      normalized.includes('realty')
     ) {
       return 'RealEstate';
     }
@@ -122,7 +117,9 @@ export function sanitizeAndValidateFinancialDataset(
       normalized.includes('retail') ||
       normalized.includes('bán lẻ') ||
       normalized.includes('f&b') ||
-      normalized.includes('nông nghiệp')
+      normalized.includes('nông nghiệp') ||
+      normalized.includes('agri') ||
+      normalized.includes('consumer')
     ) {
       return 'Retail';
     }
@@ -142,7 +139,8 @@ export function sanitizeAndValidateFinancialDataset(
       normalized.includes('cao su') ||
       normalized.includes('phân bón') ||
       normalized.includes('khoáng sản') ||
-      normalized.includes('dệt may')
+      normalized.includes('dệt may') ||
+      normalized.includes('industrial')
     ) {
       return 'Manufacturing';
     }
@@ -202,22 +200,38 @@ export function sanitizeAndValidateFinancialDataset(
       return;
     }
 
-    // YÊU CẦU 1: Linh hoạt cột định danh đầu tiên (Bỏ ràng buộc cứng 'ticker')
+    // Support AST v2 "label": "HAG // Hoàng Anh Gia Lai" or node id "node_hag"
+    let tickerCandidate = '';
+    let nameCandidate = '';
+    if (typeof row.label === 'string' && row.label.includes('//')) {
+      const parts = row.label.split('//').map((s) => s.trim());
+      tickerCandidate = parts[0];
+      nameCandidate = parts[1];
+    } else if (typeof row.label === 'string' && row.label.trim()) {
+      tickerCandidate = row.label.trim();
+      nameCandidate = row.label.trim();
+    }
+
     const firstKey = keys[0];
     const identifier = String(
       (firstKey !== undefined ? row[firstKey] : '') || '',
     ).trim();
+
     const finalIdentifier =
-      identifier ||
+      tickerCandidate ||
       String(
         row.ticker ??
         row.Ticker ??
+        (typeof row.id === 'string' && row.id.startsWith('node_')
+          ? row.id.replace('node_', '').toUpperCase()
+          : row.id) ??
         row['Mã CK'] ??
         row['Công ty'] ??
+        identifier ??
         `ROW_${idx + 1}`,
       ).trim();
 
-    // YÊU CẦU 2: Tự động phát hiện và Map cột số nếu header khác mặc định
+    // Auto-detect numeric columns or use AST v2 explicit metrics
     const numericKeys = keys.filter((k) => {
       if (k === firstKey) return false;
       const raw = row[k];
@@ -232,6 +246,8 @@ export function sanitizeAndValidateFinancialDataset(
 
     const explicitQ3 =
       row.profitQ3_2026 ??
+      row.lnttBillionVnd ??
+      row['lnttBillionVnd'] ??
       row['Q3 2026'] ??
       row.q3_2026 ??
       row['LNTT Q3'] ??
@@ -251,6 +267,8 @@ export function sanitizeAndValidateFinancialDataset(
 
     const explicitGrowthQ3 =
       row.growthQ3_YoY ??
+      row.yoyGrowthPercent ??
+      row['yoyGrowthPercent'] ??
       row['Tăng trưởng Q3'] ??
       row.yoy_q3 ??
       row['Tăng trưởng'] ??
@@ -282,18 +300,22 @@ export function sanitizeAndValidateFinancialDataset(
       (k) => k !== firstKey && !numericKeys.includes(k),
     );
 
-    const companyName = String(
-      row.companyName ??
-      row.Company ??
-      row['Tên công ty'] ??
-      row['Name'] ??
-      (nonNumericKeys.length > 0 ? row[nonNumericKeys[0]] : finalIdentifier),
-    ).trim() || finalIdentifier;
+    const companyName =
+      nameCandidate ||
+      String(
+        row.companyName ??
+        row.Company ??
+        row['Tên công ty'] ??
+        row['Name'] ??
+        (nonNumericKeys.length > 0 ? row[nonNumericKeys[0]] : finalIdentifier),
+      ).trim() || finalIdentifier;
 
     const rawSector = String(
       row.sector ??
       row.Sector ??
       row['Ngành'] ??
+      row.path ??
+      row['path'] ??
       (nonNumericKeys.length > 1 ? row[nonNumericKeys[1]] : 'Other'),
     );
     const sector: SectorType = SectorEnum.safeParse(rawSector).success
@@ -301,6 +323,7 @@ export function sanitizeAndValidateFinancialDataset(
       : mapRawSector(rawSector);
 
     const candidate = {
+      ...row,
       id: String(
         row.id ??
         `${finalIdentifier.toLowerCase().replace(/[^a-z0-9]/g, '_')}-${idx}`,
@@ -310,7 +333,7 @@ export function sanitizeAndValidateFinancialDataset(
       companyName,
       sector,
       industryLabel: String(
-        row.industryLabel ?? row['Ngành'] ?? sector,
+        row.industryLabel ?? row['Ngành'] ?? (row.path ? String(row.path) : sector),
       ),
       profitQ3_2026: primaryNumVal,
       profitQ3_2025: cleanAndParseFloat(
@@ -333,8 +356,13 @@ export function sanitizeAndValidateFinancialDataset(
       if (parsed.success) {
         valid.push(parsed.data);
       } else {
+        console.error('[Zod Validation Error Details]:', parsed.error.format());
+        errors.push(
+          `Row ${idx + 1} (${finalIdentifier}): ${parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ')}`,
+        );
         // Fallback compensation to prevent app crash and preserve row
         valid.push({
+          ...candidate,
           id: candidate.id,
           ticker: candidate.ticker,
           identifier: candidate.identifier,
