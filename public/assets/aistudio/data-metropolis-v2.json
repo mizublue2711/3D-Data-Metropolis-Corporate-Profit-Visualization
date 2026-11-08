@@ -1,0 +1,153 @@
+{
+  "version": "2.0.0-PROD",
+  "systemIdentity": "ARTIFICIAL CRAFT // DATA METROPOLIS",
+  "targetPlatform": "https://artificialcraft.space/",
+  "architecturalParadigm": "0-Code JSON-Driven Spatial Architecture & 3-Tier Decoupled Matrix",
+  "globalConfig": {
+    "theme": "Cybernetic Swiss Brutalism",
+    "renderingEngine": "Three.js / WebGL2 (WebGPU Ready)",
+    "colorTokens": {
+      "groundVoid": "#05050A",
+      "surfacePanel": "#0A0C14",
+      "borderMuted": "#1F1F2E",
+      "borderSubtle": "#2D2D44",
+      "hyperCyan": "#00E5FF",
+      "electricIndigo": "#5322FF",
+      "satelliteEmerald": "#10B981"
+    },
+    "spatialEnvironment": {
+      "fogType": "VolumetricExp2",
+      "fogColor": "#05050A",
+      "fogDensity": 0.012,
+      "datumPlane": {
+        "gridColor": "#2D2D44",
+        "opacity": 0.35,
+        "yLevel": 0.0
+      },
+      "subStructure": {
+        "enabled": true,
+        "type": "InvertedChiseledPyramids",
+        "pollenParticles": true
+      }
+    }
+  },
+  "tree": {
+    "id": "root_metropolis",
+    "label": "VIETNAM_CORPORATE_METROPOLIS_2026",
+    "type": "directory",
+    "path": "/",
+    "zone": "Zone 02: Exploded Data Matrix",
+    "layer": "midground",
+    "position": { "x": 0.0, "y": 0.0, "z": 0.0 },
+    "children": [
+      {
+        "id": "node_hag",
+        "label": "HAG // Hoàng Anh Gia Lai",
+        "type": "file",
+        "path": "/agri/hag",
+        "layer": "foreground",
+        "colorHex": "#00E5FF",
+        "lnttBillionVnd": 1705,
+        "yoyGrowthPercent": 48.2,
+        "position": { "x": -4.0, "y": 0.0, "z": 2.0 },
+        "geometry": {
+          "type": "ChamferedMonolith",
+          "height": 4.2,
+          "width": 1.2,
+          "depth": 1.2,
+          "recessedSensorDock": true
+        }
+      },
+      {
+        "id": "node_fpt",
+        "label": "FPT // Tập đoàn FPT",
+        "type": "file",
+        "path": "/tech/fpt",
+        "layer": "foreground",
+        "colorHex": "#5322FF",
+        "lnttBillionVnd": 9200,
+        "yoyGrowthPercent": 20.1,
+        "position": { "x": 4.0, "y": 0.0, "z": -2.0 },
+        "geometry": {
+          "type": "ChamferedMonolith",
+          "height": 9.2,
+          "width": 1.4,
+          "depth": 1.4,
+          "recessedSensorDock": true
+        }
+      },
+      {
+        "id": "node_vnm",
+        "label": "VNM // Vinamilk",
+        "type": "file",
+        "path": "/consumer/vnm",
+        "layer": "midground",
+        "colorHex": "#10B981",
+        "lnttBillionVnd": 10500,
+        "yoyGrowthPercent": 5.4,
+        "position": { "x": 2.0, "y": 0.0, "z": 5.0 },
+        "geometry": {
+          "type": "ChamferedMonolith",
+          "height": 10.5,
+          "width": 1.5,
+          "depth": 1.5,
+          "recessedSensorDock": true
+        }
+      },
+      {
+        "id": "node_vhm",
+        "label": "VHM // Vinhomes",
+        "type": "file",
+        "path": "/realty/vhm",
+        "layer": "midground",
+        "colorHex": "#5322FF",
+        "lnttBillionVnd": 35200,
+        "yoyGrowthPercent": 14.8,
+        "position": { "x": -2.0, "y": 0.0, "z": -4.0 },
+        "geometry": {
+          "type": "ChamferedMonolith",
+          "height": 15.0,
+          "width": 1.8,
+          "depth": 1.8,
+          "recessedSensorDock": true
+        }
+      },
+      {
+        "id": "node_hpg",
+        "label": "HPG // Tập đoàn Hòa Phát",
+        "type": "file",
+        "path": "/industrial/hpg",
+        "layer": "background",
+        "colorHex": "#00E5FF",
+        "lnttBillionVnd": 12100,
+        "yoyGrowthPercent": 32.5,
+        "position": { "x": -6.0, "y": 0.0, "z": -8.0 },
+        "geometry": {
+          "type": "ChamferedMonolith",
+          "height": 12.1,
+          "width": 1.6,
+          "depth": 1.6,
+          "recessedSensorDock": true
+        }
+      },
+      {
+        "id": "node_tcb",
+        "label": "TCB // Techcombank",
+        "type": "file",
+        "path": "/finance/tcb",
+        "layer": "background",
+        "colorHex": "#10B981",
+        "lnttBillionVnd": 22900,
+        "yoyGrowthPercent": 18.6,
+        "position": { "x": 6.0, "y": 0.0, "z": 8.0 },
+        "geometry": {
+          "type": "ChamferedMonolith",
+          "height": 13.5,
+          "width": 1.7,
+          "depth": 1.7,
+          "recessedSensorDock": true
+        }
+      }
+    ]
+  }
+}
