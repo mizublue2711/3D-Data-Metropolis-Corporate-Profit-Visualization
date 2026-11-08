@@ -168,6 +168,38 @@ NO RELATIVE IMPORTS: Never use relative paths such as ../../components or ../../
 STANDARD ALIAS @/: Convert all imports to use the configured Vite path alias (@/components/..., @/core/..., @/types/..., @/lib/...).
 VITE ENV VARS: All environment variables MUST be accessed via import.meta.env.VITE_* (e.g., import.meta.env.VITE_N8N_WEBHOOK_URL). NEVER use process.env.
 
+-----------------------------------------------------------
+
+# AGENT OPERATIONAL & DEPLOYMENT GUARDRAILS
+
+## Rule 1: Mandatory Entry Point & Component Wiring Verification
+- Before declaring any UI or module task complete, you MUST verify that every newly created or refactored component is explicitly imported and rendered within the main application tree (e.g., `src/App.tsx` or `src/main.tsx`).
+- Creating standalone component files without connecting them to the root React/DOM tree is strictly prohibited, as bundlers (Vite/Webpack) will treat them as unreferenced orphan files and exclude them from the output build.
+
+## Rule 2: Deterministic Cache Eviction & Strict Build Verification
+- Prior to running any production build test (`npm run build`), you MUST purge all local bundler caches (`rm -rf node_modules/.vite dist`).
+- Executing `npm run build` without cache eviction is forbidden to prevent stale pre-bundled chunks.
+- Builds must pass strict type-checking (`tsc && vite build`) with an explicit exit status of `0`. `Found 0 errors` is mandatory.
+
+## Rule 3: Bundle Hash Change & Asset Audit
+- After building, you MUST inspect `dist/index.html` or `dist/assets/` to confirm that the JavaScript bundle hash has changed compared to the previous deployment build.
+- If the bundle hash remains identical to the previous build, treat the build as a **Build Failure / Stale Asset Event**, halt execution, and trace missing imports.
+
+## Rule 4: Visual Acceptance Criteria (Anti-False-Positive Rule)
+- Never confirm UI task completion based solely on HTTP 200 status codes, clean console logs, or basic Playwright canvas presence.
+- You MUST verify UI changes using a strict **Visual Baseline Audit** consisting of at least 3 immutable, unique visual markers:
+  1. Presence of new explicit UI text labels or IDs 
+  2. Distinct unique CSS color values 
+  3. Interactive DOM element state changes verified on the actual preview/live URL with browser cache disabled.
+
+## Rule 5: Micro-Ticket Granularity & Task Scope Limit
+- Tasks assigned to execution turns MUST be scoped as single **Micro-Tickets** limited to 1-2 core responsibilities (maximum 15-20 minutes of agent execution).
+- Complex multi-feature prompts MUST be decomposed into sequential micro-tickets. Every micro-ticket must achieve an `npm run build exit 0` state before proceeding to the next.
+
+## Rule 6: Fresh Session & Process Hygiene Protocol
+- *Run* *./deployment-audit.sh* *and confirm exit code 0.*
+- Long-running chat sessions with accumulated terminal log buffers or Playwright background processes must be discarded to prevent context overload, zombie process deadlocks, and confirmation bias.
+
 
 9. ZOD SCHEMAS & ZERO-CRASH FALLBACK POLICY
 MANDATORY INGESTION GATE: All incoming JSON AST payloads MUST be validated against ZodSchema.safeParse(body) prior to rendering.
