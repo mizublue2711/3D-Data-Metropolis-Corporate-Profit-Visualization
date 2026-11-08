@@ -19,6 +19,7 @@
     "useDefineForClassFields": false,
     "types": ["dom-speech-recognition", "node"],
     "paths": {
+      "@/*": ["./src/*"],
       "rapier3d": ["./node_modules/@dimforge/rapier3d-simd-compat/rapier"],
       "troika-three-text": [
         "./node_modules/troika-types/packages/troika-three-text/dist/src/index"
