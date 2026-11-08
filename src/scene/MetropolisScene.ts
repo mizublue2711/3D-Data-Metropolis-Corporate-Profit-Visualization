@@ -14,6 +14,8 @@ import {
   SectorType,
 } from '../types';
 import { ArchitectureEnvironment } from './ArchitectureEnvironment';
+import { InvertedSubStructureModule } from '../components/canvas/InvertedSubStructureModule';
+import { DataVectorArcsModule } from '../components/canvas/DataVectorArcsModule';
 
 // Pre-allocated module-scope scratch objects to ensure zero GC in the 60fps loop
 const _dummy = new THREE.Object3D();
@@ -43,6 +45,8 @@ export class MetropolisScene extends xb.Script {
   public onStateUpdated?: () => void;
 
   private archEnv?: ArchitectureEnvironment;
+  private subStructureModule?: InvertedSubStructureModule;
+  private vectorArcsModule?: DataVectorArcsModule;
   private maxInstances = 160;
 
   // Multi-part Composite InstancedMeshes for Voxel Towers
@@ -141,6 +145,13 @@ export class MetropolisScene extends xb.Script {
         : 4;
     this.archEnv = new ArchitectureEnvironment(maxAniso);
     this.add(this.archEnv);
+
+    // Initialize 3D Inverted Negative SubStructure & Bezier Vector Arcs
+    this.subStructureModule = new InvertedSubStructureModule();
+    this.subStructureModule.init(this as unknown as THREE.Scene, (xb as any).camera);
+
+    this.vectorArcsModule = new DataVectorArcsModule();
+    this.vectorArcsModule.init(this as unknown as THREE.Scene, (xb as any).camera);
 
     this.createCompositeVoxelInstancedMeshes();
     this.createHyperGrowthParticleAura();
@@ -1285,6 +1296,10 @@ export class MetropolisScene extends xb.Script {
     const dt = Math.min(rawDt > 0 ? rawDt : 0.016, 0.05);
     this.elapsedTime += dt;
 
+    // Update 3D Inverted SubStructure & Bezier Arcs
+    this.subStructureModule?.update(dt, this.elapsedTime);
+    this.vectorArcsModule?.update(dt, this.elapsedTime);
+
     // Live FPS calculation
     this.frameCounter++;
     this.fpsAccumTime += dt;
@@ -1408,6 +1423,8 @@ export class MetropolisScene extends xb.Script {
   }
 
   public dispose(): void {
+    this.subStructureModule?.dispose();
+    this.vectorArcsModule?.dispose();
     this.archEnv?.dispose();
     this.shaftInstanced?.geometry.dispose();
     this.plinthInstanced?.geometry.dispose();
