@@ -2,8 +2,7 @@ import { BrutalistButton } from './BrutalistButton';
 
 export class HUDOverlay {
   public container: HTMLDivElement;
-  private fpsLabel!: HTMLSpanElement;
-  private camPosLabel!: HTMLDivElement;
+  private bottomTelemetryBar!: HTMLDivElement;
   private isDockCollapsed: boolean = false;
   private onToggleDockCallback: () => void;
 
@@ -21,48 +20,49 @@ export class HUDOverlay {
       position: 'fixed',
       inset: '0',
       pointerEvents: 'none',
-      zIndex: '40',
-      fontFamily: 'monospace',
+      zIndex: '9999',
+      fontFamily: "'Space Grotesk', 'JetBrains Mono', monospace",
       userSelect: 'none',
       overflow: 'hidden',
     });
   }
 
   private build4Corners(): void {
-    // Top Left: Corner A
-    const topLeft = document.createElement('div');
-    topLeft.style.cssText =
-      'position: absolute; top: 12px; left: 16px; font-size: 10px; color: rgba(0,229,255,0.7); letter-spacing: 0.1em;';
-    topLeft.textContent = '[ A // 01 • DATA_METROPOLIS_SUBSTRATE ]';
-    this.container.appendChild(topLeft);
+    // Corner A: Top Left
+    const cornerA = document.createElement('div');
+    cornerA.style.cssText =
+      'position: absolute; top: 12px; left: 16px; font-size: 11px; font-weight: 600; color: #00E5FF; letter-spacing: 0.12em; text-shadow: 0 0 8px rgba(0,229,255,0.4);';
+    cornerA.textContent = '[ A // 01 ]';
+    this.container.appendChild(cornerA);
 
-    // Top Right: Corner B + Telemetry
-    const topRight = document.createElement('div');
-    topRight.style.cssText =
-      'position: absolute; top: 12px; right: 16px; font-size: 10px; color: rgba(0,229,255,0.7); letter-spacing: 0.1em; display: flex; gap: 12px; align-items: center;';
-
-    this.fpsLabel = document.createElement('span');
-    this.fpsLabel.textContent = '[ ⏣ GPU_LOCK • 60 FPS ]';
-    topRight.appendChild(this.fpsLabel);
-
-    const cornerB = document.createElement('span');
+    // Corner B: Top Right
+    const cornerB = document.createElement('div');
+    cornerB.style.cssText =
+      'position: absolute; top: 12px; right: 16px; font-size: 11px; font-weight: 600; color: #00E5FF; letter-spacing: 0.12em; text-shadow: 0 0 8px rgba(0,229,255,0.4);';
     cornerB.textContent = '[ B // 02 ]';
-    topRight.appendChild(cornerB);
-    this.container.appendChild(topRight);
+    this.container.appendChild(cornerB);
 
-    // Bottom Left: Corner D + Cam Pos
-    this.camPosLabel = document.createElement('div');
-    this.camPosLabel.style.cssText =
-      'position: absolute; bottom: 12px; left: 16px; font-size: 10px; color: rgba(255,255,255,0.5); letter-spacing: 0.1em;';
-    this.camPosLabel.textContent = '[ D // 04 • CAM_POS: X:0 Y:15 Z:45 ]';
-    this.container.appendChild(this.camPosLabel);
+    // Corner C: Bottom Right
+    const cornerC = document.createElement('div');
+    cornerC.style.cssText =
+      'position: absolute; bottom: 12px; right: 16px; font-size: 11px; font-weight: 600; color: #00E5FF; letter-spacing: 0.12em; text-shadow: 0 0 8px rgba(0,229,255,0.4);';
+    cornerC.textContent = '[ C // 03 ]';
+    this.container.appendChild(cornerC);
 
-    // Bottom Right: Corner C + Hotkey Hint
-    const bottomRight = document.createElement('div');
-    bottomRight.style.cssText =
-      'position: absolute; bottom: 12px; right: 16px; font-size: 10px; color: rgba(0,229,255,0.7); letter-spacing: 0.1em;';
-    bottomRight.textContent = '[ C // 03 • PRESS "H" TO TOGGLE DOCK ]';
-    this.container.appendChild(bottomRight);
+    // Corner D: Bottom Left
+    const cornerD = document.createElement('div');
+    cornerD.style.cssText =
+      'position: absolute; bottom: 12px; left: 16px; font-size: 11px; font-weight: 600; color: #00E5FF; letter-spacing: 0.12em; text-shadow: 0 0 8px rgba(0,229,255,0.4);';
+    cornerD.textContent = '[ D // 04 ]';
+    this.container.appendChild(cornerD);
+
+    // Center Bottom Telemetry Bar: [ ⏣ GPU_LOCK • 60 FPS // LOC: X+3.22m Y-1.04m ]
+    this.bottomTelemetryBar = document.createElement('div');
+    this.bottomTelemetryBar.style.cssText =
+      'position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); font-size: 11px; font-family: "JetBrains Mono", monospace; color: #8A8FA3; letter-spacing: 0.1em; white-space: nowrap; pointer-events: none;';
+    this.bottomTelemetryBar.textContent =
+      '[ ⏣ GPU_LOCK • 60 FPS // LOC: X+3.22m Y-1.04m ]';
+    this.container.appendChild(this.bottomTelemetryBar);
   }
 
   private setupHotkeyListener(): void {
@@ -85,7 +85,10 @@ export class HUDOverlay {
     fps: number,
     camPos: { x: number; y: number; z: number },
   ): void {
-    this.fpsLabel.textContent = `[ ⏣ GPU_LOCK • ${Math.round(fps)} FPS ]`;
-    this.camPosLabel.textContent = `[ D // 04 • CAM_POS: X:${Math.round(camPos.x)} Y:${Math.round(camPos.y)} Z:${Math.round(camPos.z)} ]`;
+    const formatCoord = (val: number) =>
+      val >= 0 ? `+${val.toFixed(2)}m` : `${val.toFixed(2)}m`;
+    if (this.bottomTelemetryBar) {
+      this.bottomTelemetryBar.textContent = `[ ⏣ GPU_LOCK • ${Math.round(fps)} FPS // LOC: X${formatCoord(camPos.x)} Y${formatCoord(camPos.y)} ]`;
+    }
   }
 }

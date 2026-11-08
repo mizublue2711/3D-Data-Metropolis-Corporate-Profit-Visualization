@@ -11,40 +11,70 @@ export class InvertedSubStructureModule implements ISceneModule {
   private materialsToDispose: THREE.Material[] = [];
 
   public init(scene: THREE.Scene, _camera: THREE.PerspectiveCamera): void {
-    // 1. Dựng khối kim tự tháp mọc ngược âm (Y < 0)
-    const geo = new THREE.ConeGeometry(40, 60, 4);
-    geo.rotateX(Math.PI); // Quay ngược đỉnh hướng xuống -Y
-    this.geometriesToDispose.push(geo);
+    // 1. Spawning 45° Inverted Pyramids below the glass floor (Y < 0)
+    const pyramidPositions = [
+      new THREE.Vector3(0, -2.5, 0),
+      new THREE.Vector3(-4.5, -2.0, -3.5),
+      new THREE.Vector3(4.5, -2.2, 3.5),
+      new THREE.Vector3(-3.5, -1.8, 3.5),
+      new THREE.Vector3(3.5, -2.0, -3.5),
+    ];
 
-    const mat = new THREE.MeshBasicMaterial({
+    const pyramidGeo = new THREE.ConeGeometry(2.4, 3.6, 4);
+    pyramidGeo.rotateX(Math.PI); // Invert apex to point down (-Y)
+    this.geometriesToDispose.push(pyramidGeo);
+
+    const pyramidMat = new THREE.MeshBasicMaterial({
       color: 0x0a0c14,
       wireframe: true,
       wireframeLinewidth: 1,
     });
-    this.materialsToDispose.push(mat);
+    this.materialsToDispose.push(pyramidMat);
 
-    const pyramidMesh = new THREE.Mesh(geo, mat);
-    pyramidMesh.position.set(0, -30, 0);
-    this.group.add(pyramidMesh);
+    // 1px Glowing Sensor Core at each apex
+    const sensorGeo = new THREE.BoxGeometry(0.18, 0.18, 0.18);
+    const sensorMatCyan = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+    const sensorMatIndigo = new THREE.MeshBasicMaterial({ color: 0x5322ff });
+    this.geometriesToDispose.push(sensorGeo);
+    this.materialsToDispose.push(sensorMatCyan, sensorMatIndigo);
 
-    // 2. Dựng hạt Cyber Pollen rơi dọc trục -Y
+    pyramidPositions.forEach((pos, idx) => {
+      const pyramidMesh = new THREE.Mesh(pyramidGeo, pyramidMat);
+      pyramidMesh.position.copy(pos);
+      this.group.add(pyramidMesh);
+
+      const sensorMesh = new THREE.Mesh(
+        sensorGeo,
+        idx % 2 === 0 ? sensorMatCyan : sensorMatIndigo,
+      );
+      // Position at inverted apex (base is at Y=0, apex is at Y = pos.y - 1.8)
+      sensorMesh.position.set(pos.x, pos.y - 1.8, pos.z);
+      this.group.add(sensorMesh);
+    });
+
+    // 2. Cyber Pollen Particles falling slowly along -Y through Datum Glass Floor
     const particleCount = 200;
     const positions = new Float32Array(particleCount * 3);
     for (let i = 0; i < particleCount * 3; i += 3) {
-      positions[i] = (Math.random() - 0.5) * 100;
-      positions[i + 1] = Math.random() * 50; // Xuất phát từ Y >= 0
-      positions[i + 2] = (Math.random() - 0.5) * 100;
+      positions[i] = (Math.random() - 0.5) * 18;
+      positions[i + 1] = Math.random() * 8; // Start from Y in [0, 8]
+      positions[i + 2] = (Math.random() - 0.5) * 18;
     }
 
     this.particleGeo = new THREE.BufferGeometry();
-    this.particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    this.particleGeo.setAttribute(
+      'position',
+      new THREE.BufferAttribute(positions, 3),
+    );
     this.geometriesToDispose.push(this.particleGeo);
 
     this.particleMat = new THREE.PointsMaterial({
       color: 0x00e5ff,
-      size: 0.8,
+      size: 0.065,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
     });
     this.materialsToDispose.push(this.particleMat);
 
@@ -59,9 +89,9 @@ export class InvertedSubStructureModule implements ISceneModule {
     const pos = this.particleGeo.attributes.position as THREE.BufferAttribute;
     const array = pos.array as Float32Array;
     for (let i = 1; i < array.length; i += 3) {
-      array[i] -= deltaTime * 12; // Hạt rơi dọc trục -Y
-      if (array[i] < -40) {
-        array[i] = 40; // Loop lại từ trên cao
+      array[i] -= deltaTime * 0.85; // Fall slowly along -Y
+      if (array[i] < -4.5) {
+        array[i] = 7.5; // Loop back from high altitude
       }
     }
     pos.needsUpdate = true;

@@ -390,16 +390,16 @@ export class StudioOverlay {
 
           <!-- Bottom-Center Quick Camera & Metric Bar -->
           <div class="flex items-center justify-center">
-            <div class="pointer-events-auto bg-[#09090B]/95 border border-white/15 rounded px-3 py-1.5 flex flex-wrap items-center gap-2 font-mono-tabular text-[11px] shadow-xl">
-              <span class="text-zinc-400">VIEW:</span>
-              <button data-cam-preset="isometric" class="px-2 py-1 rounded cursor-pointer ${this.state.cameraPresetMode === 'isometric' ? 'bg-cyan-400 text-zinc-950 font-semibold' : 'text-zinc-300 hover:bg-zinc-800'}">Isometric</button>
-              <button data-cam-preset="nightVault" class="px-2 py-1 rounded cursor-pointer ${this.state.cameraPresetMode === 'nightVault' ? 'bg-cyan-400 text-zinc-950 font-semibold' : 'text-zinc-300 hover:bg-zinc-800'}">Night Vault (X&gt;+3.22m)</button>
-              <button data-cam-preset="topDown" class="px-2 py-1 rounded cursor-pointer ${this.state.cameraPresetMode === 'topDown' ? 'bg-cyan-400 text-zinc-950 font-semibold' : 'text-zinc-300 hover:bg-zinc-800'}">Top-Down CAD</button>
-              <button data-cam-preset="streetDrone" class="px-2 py-1 rounded cursor-pointer ${this.state.cameraPresetMode === 'streetDrone' ? 'bg-cyan-400 text-zinc-950 font-semibold' : 'text-zinc-300 hover:bg-zinc-800'}">Drone View</button>
-              <button data-cam-preset="duel" class="px-2 py-1 rounded cursor-pointer ${this.state.cameraPresetMode === 'duel' ? 'bg-cyan-400 text-zinc-950 font-semibold' : 'text-zinc-300 hover:bg-zinc-800'}">Duel (${this.state.duelCompanyA} vs ${this.state.duelCompanyB})</button>
+            <div class="pointer-events-auto bg-[#09090B]/95 border border-[#1F1F2E] px-3 py-1.5 flex flex-wrap items-center gap-2 font-mono-tabular text-[11px] shadow-2xl">
+              <span class="text-zinc-400 font-semibold tracking-wider">VIEW:</span>
+              <button data-cam-preset="isometric" class="brutalist-btn ${this.state.cameraPresetMode === 'isometric' ? 'brutalist-btn-active' : ''}">Isometric</button>
+              <button data-cam-preset="nightVault" class="brutalist-btn ${this.state.cameraPresetMode === 'nightVault' ? 'brutalist-btn-active' : ''}">Night Vault (X&gt;+3.22m)</button>
+              <button data-cam-preset="topDown" class="brutalist-btn ${this.state.cameraPresetMode === 'topDown' ? 'brutalist-btn-active' : ''}">Top-Down CAD</button>
+              <button data-cam-preset="streetDrone" class="brutalist-btn ${this.state.cameraPresetMode === 'streetDrone' ? 'brutalist-btn-active' : ''}">Drone View</button>
+              <button data-cam-preset="duel" class="brutalist-btn ${this.state.cameraPresetMode === 'duel' ? 'brutalist-btn-active' : ''}">Duel (${this.state.duelCompanyA} vs ${this.state.duelCompanyB})</button>
               ${
                 this.state.lockedCompanyId
-                  ? `<button id="btn-unlock-camera" class="ml-2 px-2.5 py-1 bg-red-500/20 border border-red-500/40 text-red-300 rounded cursor-pointer">Unlock Tower [Esc]</button>`
+                  ? `<button id="btn-unlock-camera" class="ml-2 brutalist-btn brutalist-btn-danger">Unlock Tower [Esc]</button>`
                   : ''
               }
             </div>

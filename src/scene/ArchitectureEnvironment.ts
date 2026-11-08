@@ -16,7 +16,7 @@ import { SectorType, ThemePreset } from '../types';
  * - Sector District 1px Perimeter Frames & Procedural Floor Signage
  */
 export class ArchitectureEnvironment extends THREE.Group {
-  private starMaterial: THREE.ShaderMaterial;
+  private starMaterial?: THREE.ShaderMaterial;
   private laserShaderMaterial!: THREE.ShaderMaterial;
   private floorMaterial: THREE.MeshStandardMaterial;
   private wallMaterial: THREE.MeshStandardMaterial;
@@ -82,10 +82,12 @@ export class ArchitectureEnvironment extends THREE.Group {
     );
 
     this.buildObsidianFloor();
-    this.buildBrutalistBunkerWallsAndPanels(maxAnisotropy);
+    // Removed gray enclosure bunker walls & panels for Zero-G Spatial Matrix
+    // this.buildBrutalistBunkerWallsAndPanels(maxAnisotropy);
     this.buildPitchBlackNightSkyVaultDome();
     this.buildCompositeTelemetryVaultAndLaserBeam();
-    this.starMaterial = this.buildStarfieldVault();
+    // Removed chaotic block starfield clutter in favor of Cyber Pollen
+    // this.starMaterial = this.buildStarfieldVault();
     this.buildDistrictPerimeters(maxAnisotropy);
   }
 
@@ -166,30 +168,24 @@ export class ArchitectureEnvironment extends THREE.Group {
   }
 
   private buildObsidianFloor(): void {
-    // Interior & Exterior continuous Swiss-Grid floor slab
-    const floorGeo = new THREE.PlaneGeometry(24, 18);
-    this.geometriesToDispose.push(floorGeo);
-    const floorMesh = new THREE.Mesh(floorGeo, this.floorMaterial);
+    // 1px CAD Datum Glass Floor at Y = 0 (opacity: 0.35, depthWrite: false)
+    const glassFloorGeo = new THREE.PlaneGeometry(36, 36);
+    this.geometriesToDispose.push(glassFloorGeo);
+
+    const glassFloorMat = new THREE.MeshBasicMaterial({
+      color: 0x0a0c14,
+      map: this.floorMaterial.map,
+      transparent: true,
+      opacity: 0.35,
+      depthWrite: false, // Ensures Y < 0 inverted pyramids are clearly visible below
+    });
+    this.materialsToDispose.push(glassFloorMat);
+
+    const floorMesh = new THREE.Mesh(glassFloorGeo, glassFloorMat);
     floorMesh.rotation.x = -Math.PI / 2;
-    floorMesh.position.set(0, -0.005, 0);
-    floorMesh.receiveShadow = true;
+    floorMesh.position.set(0, 0, 0);
     floorMesh.xb = { pointerEvents: 'none' };
     this.add(floorMesh);
-
-    // Sub-level basement basin floor for negative profit visualization
-    const subBasinGeo = new THREE.PlaneGeometry(24, 18);
-    const subBasinMat = new THREE.MeshStandardMaterial({
-      color: 0x030305,
-      roughness: 0.9,
-      metalness: 0.1,
-    });
-    this.geometriesToDispose.push(subBasinGeo);
-    this.materialsToDispose.push(subBasinMat);
-    const subBasin = new THREE.Mesh(subBasinGeo, subBasinMat);
-    subBasin.rotation.x = -Math.PI / 2;
-    subBasin.position.set(0, -1.25, 0);
-    subBasin.xb = { pointerEvents: 'none' };
-    this.add(subBasin);
   }
 
   /**
@@ -898,7 +894,9 @@ export class ArchitectureEnvironment extends THREE.Group {
   }
 
   public update(elapsedTime: number): void {
-    this.starMaterial.uniforms.uTime.value = elapsedTime;
+    if (this.starMaterial) {
+      this.starMaterial.uniforms.uTime.value = elapsedTime;
+    }
     this.laserShaderMaterial.uniforms.uTime.value = elapsedTime;
     this.beaconRingInner.rotation.z = elapsedTime * 1.15;
     this.beaconRingOuter.rotation.z = -elapsedTime * 0.75;
