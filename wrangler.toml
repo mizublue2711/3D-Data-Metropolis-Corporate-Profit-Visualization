@@ -1,0 +1,17 @@
+name = "3d-data-metropolis-corporate-profit-visualization"
+compatibility_date = "2026-11-01"
+
+[assets]
+directory = "./dist"
+
+[[routes]]
+pattern = "metropolis.artificialcraft.space/*"
+custom_domain = true
+
+[build]
+command = "npm run build"
+watch_dir = "src"
+
+[previews]
+[previews.vars]
+  ENVIRONMENT = "preview"
