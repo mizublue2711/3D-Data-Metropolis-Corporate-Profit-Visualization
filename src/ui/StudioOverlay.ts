@@ -236,7 +236,7 @@ export class StudioOverlay {
           style="width: 396px; max-width: 92vw; transform: translateX(${isCollapsed ? '-100%' : '0'});"
         >
           <!-- Sidebar Brand Header -->
-          <div class="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-2 bg-[#0c0c10]">
+          <div class="px-4 pt-7 pb-3 border-b border-white/10 flex items-center justify-between gap-2 bg-[#0c0c10]">
             <div>
               <div class="font-mono-tabular text-[11px] text-cyan-400 font-semibold tracking-wider">3D DATA METROPOLIS</div>
               <div class="text-xs text-zinc-400">LNTT Q3 &amp; 9T/2026 · 50 Companies</div>
@@ -308,7 +308,7 @@ export class StudioOverlay {
           </div>
 
           <!-- Compact Dock Footer Summary -->
-          <div class="px-4 py-2.5 border-t border-white/10 bg-[#0c0c10] flex items-center justify-between font-mono-tabular text-[11px] text-zinc-400">
+          <div class="px-4 pt-2.5 pb-7 pl-20 border-t border-white/10 bg-[#0c0c10] flex items-center justify-between font-mono-tabular text-[11px] text-zinc-400">
             <span>Q3: <strong class="text-cyan-400">${totalQ3.toLocaleString()}B</strong></span>
             <span>·</span>
             <span>9M: <strong class="text-emerald-400">${total9M.toLocaleString()}B</strong></span>
