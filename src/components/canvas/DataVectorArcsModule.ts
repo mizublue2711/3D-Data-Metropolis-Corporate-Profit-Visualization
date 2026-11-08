@@ -11,16 +11,22 @@ export class DataVectorArcsModule implements ISceneModule {
   private materialsToDispose: THREE.Material[] = [];
 
   public init(scene: THREE.Scene, _camera: THREE.PerspectiveCamera): void {
-    // Khởi tạo một số đường cong Bezier mẫu nối giữa các điểm 3D
-    const sampleConnections = [
-      { start: new THREE.Vector3(-25, 0, -25), end: new THREE.Vector3(25, 0, 25), controlY: 20 },
-      { start: new THREE.Vector3(30, 0, -20), end: new THREE.Vector3(-20, 0, 30), controlY: 25 },
+    // Inter-district financial sector connectivity Bezier arcs
+    const connections = [
+      { start: new THREE.Vector3(-2.8, 1.2, -2.4), end: new THREE.Vector3(2.6, 1.0, 2.2), controlY: 2.8 },
+      { start: new THREE.Vector3(3.2, 0.8, -1.8), end: new THREE.Vector3(-3.5, 1.1, 1.5), controlY: 3.2 },
+      { start: new THREE.Vector3(0.0, 1.4, 2.0), end: new THREE.Vector3(-2.5, 1.2, -2.2), controlY: 2.5 },
+      { start: new THREE.Vector3(2.5, 0.9, 2.5), end: new THREE.Vector3(3.0, 1.1, -1.5), controlY: 2.9 },
     ];
 
-    const arcMat = new THREE.LineBasicMaterial({ color: 0x5322ff, transparent: true, opacity: 0.5 });
+    const arcMat = new THREE.LineBasicMaterial({
+      color: 0x5322ff,
+      transparent: true,
+      opacity: 0.6,
+    });
     this.materialsToDispose.push(arcMat);
 
-    sampleConnections.forEach((conn, idx) => {
+    connections.forEach((conn, idx) => {
       const midPoint = new THREE.Vector3()
         .addVectors(conn.start, conn.end)
         .multiplyScalar(0.5);
@@ -28,9 +34,9 @@ export class DataVectorArcsModule implements ISceneModule {
 
       const curve = new THREE.QuadraticBezierCurve3(conn.start, midPoint, conn.end);
       this.curves.push(curve);
-      this.pulseProgress.push(idx * 0.5);
+      this.pulseProgress.push(idx * 0.25);
 
-      const points = curve.getPoints(32);
+      const points = curve.getPoints(36);
       const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
       this.geometriesToDispose.push(lineGeo);
 
@@ -38,13 +44,17 @@ export class DataVectorArcsModule implements ISceneModule {
       this.group.add(line);
     });
 
-    // Dựng InstancedMesh cho các xung hạt năng lượng
-    const pulseGeo = new THREE.SphereGeometry(0.4, 8, 8);
+    // Instanced energy pulses along Bezier arcs
+    const pulseGeo = new THREE.SphereGeometry(0.045, 8, 8);
     const pulseMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
     this.geometriesToDispose.push(pulseGeo);
     this.materialsToDispose.push(pulseMat);
 
-    this.pulseMesh = new THREE.InstancedMesh(pulseGeo, pulseMat, this.curves.length);
+    this.pulseMesh = new THREE.InstancedMesh(
+      pulseGeo,
+      pulseMat,
+      this.curves.length,
+    );
     this.group.add(this.pulseMesh);
 
     scene.add(this.group);
@@ -54,7 +64,7 @@ export class DataVectorArcsModule implements ISceneModule {
     if (!this.pulseMesh) return;
     const dummy = new THREE.Object3D();
     this.curves.forEach((curve, i) => {
-      this.pulseProgress[i] = (this.pulseProgress[i] + deltaTime * 0.4) % 1;
+      this.pulseProgress[i] = (this.pulseProgress[i] + deltaTime * 0.35) % 1;
       const pos = curve.getPoint(this.pulseProgress[i]);
       dummy.position.copy(pos);
       dummy.updateMatrix();

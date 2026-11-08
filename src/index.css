@@ -12,8 +12,22 @@
 
 *,
 *::before,
-*::after {
+*::after,
+button,
+div,
+span,
+input,
+select,
+textarea,
+.rounded,
+.rounded-sm,
+.rounded-xs,
+.rounded-md,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl {
   box-sizing: border-box;
+  border-radius: 0px !important;
 }
 
 html,
@@ -399,4 +413,48 @@ select {
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Cybernetic Swiss Brutalism Buttons */
+.brutalist-btn {
+  border-radius: 0px !important;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  font-family: 'Space Grotesk', 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 5px 12px;
+  cursor: pointer;
+  background-color: #0A0C14;
+  color: #00E5FF;
+  border: 1px solid #1F1F2E;
+  transition: all 0.15s ease;
+  user-select: none;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brutalist-btn:hover {
+  background-color: #141824;
+  border-color: rgba(0, 229, 255, 0.6);
+}
+
+.brutalist-btn-active {
+  background-color: #5322FF !important;
+  color: #FFFFFF !important;
+  border: 1px solid #00E5FF !important;
+  box-shadow: 0 0 12px rgba(83, 34, 255, 0.5);
+}
+
+.brutalist-btn-danger {
+  background-color: #0A0C14 !important;
+  color: #FF0055 !important;
+  border: 1px solid rgba(255, 0, 85, 0.5) !important;
+}
+
+.brutalist-btn-danger:hover {
+  background-color: rgba(255, 0, 85, 0.2) !important;
+  border-color: #FF0055 !important;
 }

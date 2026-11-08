@@ -77,6 +77,7 @@ export class MetropolisScene extends xb.Script {
 
   // Built-in XR Blocks Spatial UI Card (xb.UICard) for 3D Hover/Selection Inspection
   private spatialCard!: xb.UICard;
+  private cardTendrilLine!: THREE.Line;
   private cardTickerText!: xb.UIText;
   private cardSectorText!: xb.UIText;
   private cardMetricText!: xb.UIText;
@@ -132,9 +133,9 @@ export class MetropolisScene extends xb.Script {
       ).texture;
       pmremGenerator.dispose();
 
-      // Deep Midnight (#050508) atmosphere with Electro-Volumetric Fog (density 0.012)
-      scene.background = new THREE.Color(0x050508);
-      scene.fog = new THREE.FogExp2(0x050508, 0.012);
+      // Deep Obsidian (#05050A) atmosphere with Electro-Volumetric Fog (density 0.012)
+      scene.background = new THREE.Color(0x05050a);
+      scene.fog = new THREE.FogExp2(0x05050a, 0.012);
     }
 
     this.setupLightingRig();
@@ -451,7 +452,7 @@ export class MetropolisScene extends xb.Script {
         gap: 6,
         padding: 16,
         backgroundColor: 'rgba(9, 9, 11, 0.92)',
-        borderRadius: 12,
+        borderRadius: 0,
       },
       children: [
         this.cardTickerText,
@@ -468,6 +469,21 @@ export class MetropolisScene extends xb.Script {
     this.spatialCard.visible = false;
     this.spatialCard.name = 'TowerTelemetryUICard';
     this.add(this.spatialCard);
+
+    // 1px Cyan Vector Tendril Line from Tower Apex to Spatial Inspection Card
+    const tendrilGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0.58, 0),
+    ]);
+    const tendrilMat = new THREE.LineBasicMaterial({
+      color: 0x00e5ff,
+      transparent: true,
+      opacity: 0.9,
+    });
+    this.cardTendrilLine = new THREE.Line(tendrilGeo, tendrilMat);
+    this.cardTendrilLine.visible = false;
+    this.cardTendrilLine.xb = { pointerEvents: 'none' };
+    this.add(this.cardTendrilLine);
   }
 
   public setDataset(newRecords: FinancialCompanyData[]): void {
@@ -896,8 +912,29 @@ export class MetropolisScene extends xb.Script {
         activeTower.worldZ,
       );
       this.spatialCard.visible = true;
+
+      // Connect 1px cyan vector tendril from tower apex to card
+      if (this.cardTendrilLine) {
+        const apexY = activeTower.isNegative ? 0 : activeTower.currentHeight;
+        const positions = new Float32Array([
+          activeTower.worldX,
+          apexY,
+          activeTower.worldZ,
+          activeTower.worldX,
+          topY - 0.15,
+          activeTower.worldZ,
+        ]);
+        this.cardTendrilLine.geometry.setAttribute(
+          'position',
+          new THREE.BufferAttribute(positions, 3),
+        );
+        this.cardTendrilLine.visible = true;
+      }
     } else {
       this.spatialCard.visible = false;
+      if (this.cardTendrilLine) {
+        this.cardTendrilLine.visible = false;
+      }
     }
 
     // Locked Tower 1px Cyan Vertical Laser Beam
@@ -1438,5 +1475,7 @@ export class MetropolisScene extends xb.Script {
     this.basinMat?.dispose();
     this.auraGeo?.dispose();
     this.auraMat?.dispose();
+    this.cardTendrilLine?.geometry.dispose();
+    (this.cardTendrilLine?.material as THREE.Material)?.dispose();
   }
 }
