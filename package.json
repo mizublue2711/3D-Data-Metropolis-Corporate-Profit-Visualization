@@ -6,10 +6,9 @@
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
-    "preview": "wrangler dev",
+    "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit",
-    "deploy": "wrangler deploy"
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@dimforge/rapier3d-simd-compat": "^0.19.3",
@@ -38,7 +37,6 @@
     "@types/webxr": "^0.5.24",
     "troika-types": "^0.0.6",
     "typescript": "^7.0.2",
-    "vite": "^8.3.0",
-    "wrangler": "^4.156.1"
+    "vite": "^8.3.0"
   }
 }
