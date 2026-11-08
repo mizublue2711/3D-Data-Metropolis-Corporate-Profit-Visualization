@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { InvertedSubStructureModule } from '@/components/canvas/InvertedSubStructureModule';
 import { DataVectorArcsModule } from '@/components/canvas/DataVectorArcsModule';
 import { ISceneModule } from '@/types/scene-module';
+import { HUDOverlay } from '@/ui/HUDOverlay';
 
 export class PresentationEngine {
   private scene: THREE.Scene = new THREE.Scene();
@@ -16,6 +17,8 @@ export class PresentationEngine {
   private animationFrameId: number | null = null;
   private modules: ISceneModule[] = [];
   private datumGlassFloor: THREE.Mesh | null = null;
+  private hudOverlay: HUDOverlay | null = null;
+  private isDockCollapsed: boolean = false;
 
   public init(container: HTMLElement): void {
     const width = container.clientWidth || window.innerWidth;
@@ -49,7 +52,22 @@ export class PresentationEngine {
     this.datumGlassFloor.position.y = 0;
     this.scene.add(this.datumGlassFloor);
 
-    // 3. Đăng ký & init các Module 3D mới
+    // 3. Mount Vanilla TS HUDOverlay
+    this.hudOverlay = new HUDOverlay(() => {
+      this.isDockCollapsed = !this.isDockCollapsed;
+      const dockElem =
+        document.getElementById('configurator-dock') ||
+        document.getElementById('studio-ui-root') ||
+        document.querySelector('.studio-dock');
+      if (dockElem) {
+        (dockElem as HTMLElement).style.display = this.isDockCollapsed
+          ? 'none'
+          : 'block';
+      }
+    });
+    document.body.appendChild(this.hudOverlay.container);
+
+    // 4. Đăng ký & init các Module 3D mới
     const subStructureModule = new InvertedSubStructureModule();
     subStructureModule.init(this.scene, this.camera);
     this.modules.push(subStructureModule);
@@ -81,6 +99,12 @@ export class PresentationEngine {
     // Cập nhật vòng lặp cho tất cả Module
     this.modules.forEach((mod) => mod.update(deltaTime, elapsedTime));
 
+    // Cập nhật telemetry theo thời gian thực cho HUD
+    if (this.hudOverlay && this.camera) {
+      const currentFps = 1 / Math.max(deltaTime, 0.001);
+      this.hudOverlay.updateTelemetry(currentFps, this.camera.position);
+    }
+
     if (this.renderer) {
       this.renderer.render(this.scene, this.camera);
     }
@@ -93,6 +117,11 @@ export class PresentationEngine {
       this.animationFrameId = null;
     }
     window.removeEventListener('resize', this.onWindowResize);
+
+    if (this.hudOverlay && this.hudOverlay.container.parentNode) {
+      this.hudOverlay.container.parentNode.removeChild(this.hudOverlay.container);
+      this.hudOverlay = null;
+    }
 
     // Giải phóng bộ nhớ của tất cả các Module
     this.modules.forEach((mod) => mod.dispose());
