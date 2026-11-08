@@ -5,7 +5,7 @@ compatibility_date = "2026-11-01"
 directory = "./dist"
 
 [[routes]]
-pattern = "metropolis.artificialcraft.space"
+pattern = "metropolis.artificialcraft.space/*"
 custom_domain = true
 
 [build]
