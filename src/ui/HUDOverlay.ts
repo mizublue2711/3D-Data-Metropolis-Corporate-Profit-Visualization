@@ -18,7 +18,7 @@ export class HUDOverlay {
 
   private setupStyles(): void {
     Object.assign(this.container.style, {
-      position: 'absolute',
+      position: 'fixed',
       inset: '0',
       pointerEvents: 'none',
       zIndex: '40',
