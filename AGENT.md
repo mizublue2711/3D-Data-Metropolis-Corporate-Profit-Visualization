@@ -143,6 +143,8 @@ All autonomous AI Agents (Orchestrators like Antigravity and Workers like Cline)
   npx tsc --noEmit
 ZERO-ERROR REQUIREMENT: The execution output MUST yield exactly: Found 0 errors.
 CIRCUIT BREAKER & REVERT RULE: If compilation returns errors (> 0 errors), the worker MUST NOT switch tasks or commit code. Fix the TypeScript errors immediately. If the error remains unresolved after 3 attempts, execute git checkout -- . to revert to the last stable state and notify the Orchestrator.
+
+
 3. THREE.JS VRAM MEMORY LEAK SLA ($0.00 MEMORY LEAK SLA)
 ISCENEMODULE INTERFACE CONTRACT: Every custom 3D scene module created in src/components/canvas/ MUST implement the ISceneModule interface:
 export interface ISceneModule {
@@ -153,14 +155,20 @@ export interface ISceneModule {
   dispose(): void; // MANDATORY VRAM cleanup (\$0.00 Memory Leak SLA)
 }
 MANDATORY VRAM DISPOSAL: Empty dispose() methods are STRICTLY PROHIBITED. The dispose() function MUST explicitly dispose of all THREE.BufferGeometry, THREE.Material, THREE.Texture instances, clear THREE.InstancedMesh buffers, and remove all child objects from THREE.Scene.
-4. ZERO-CODE JSON AST POLICY & SINGLE SOURCE OF TRUTH (SSOT) REGISTRY
+
+
+5. ZERO-CODE JSON AST POLICY & SINGLE SOURCE OF TRUTH (SSOT) REGISTRY
 3-TIER DECOUPLED ARCHITECTURE: Respect the 3-Tier model: Tier 1 Reasoning (Emit JSON AST) ➔ Tier 2 Orchestrator (n8n/Cloudflare/Vite Proxy Route & Validate) ➔ Tier 3 Presentation Canvas (Vite React GPU Client 60 FPS).
 FROZEN UI COMPONENT LAYER: Content and spatial layout updates MUST be executed strictly by emitting lightweight JSON AST payloads (~50 tokens). DO NOT alter existing TSX component files in src/components/ to perform content updates.
 SSOT REGISTRY ENFORCEMENT: All 3D procedural components, HUD overlays, and Canvas routines MUST be registered centrally in src/core/registry.ts.
-5. PATH ALIASES & VITE ENVIRONMENT VARIABLES
+
+
+7. PATH ALIASES & VITE ENVIRONMENT VARIABLES
 NO RELATIVE IMPORTS: Never use relative paths such as ../../components or ../../types.
 STANDARD ALIAS @/: Convert all imports to use the configured Vite path alias (@/components/..., @/core/..., @/types/..., @/lib/...).
 VITE ENV VARS: All environment variables MUST be accessed via import.meta.env.VITE_* (e.g., import.meta.env.VITE_N8N_WEBHOOK_URL). NEVER use process.env.
-6. ZOD SCHEMAS & ZERO-CRASH FALLBACK POLICY
+
+
+9. ZOD SCHEMAS & ZERO-CRASH FALLBACK POLICY
 MANDATORY INGESTION GATE: All incoming JSON AST payloads MUST be validated against ZodSchema.safeParse(body) prior to rendering.
 2-TIER GRACEFUL FALLBACK: If an unmapped or unregistered componentKey is ingested, fallback to swiss-hud or procedural canvas generators. The application MUST NOT throw unhandled exceptions or crash the WebGL context.
